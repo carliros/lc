@@ -1,40 +1,41 @@
-module Simple(nf) where
+module Simple(normalForm) where
 
 import           Data.List (union, (\\))
 import           IdInt
 import           Lambda
 
 -- | Computes normal form
-nf :: LC IdInt -> LC IdInt
-nf e@(Var _) = e
-nf (Lam x e) = Lam x (nf e)
-nf (App f a) =
-    case whnf f of
-        Lam x b -> nf (subst x a b)
-        f'      -> App (nf f') (nf a)
+normalForm :: LC IdInt -> LC IdInt
+normalForm e@(Var _) = e
+normalForm (Lam x e) = Lam x (normalForm e)
+normalForm (App f a) =
+    case weekHeadNormalForm f of
+        Lam x b -> normalForm (substitute x a b)
+        f'      -> App (normalForm f') (normalForm a)
 
--- | Computes week head normal form
-whnf :: LC IdInt -> LC IdInt
-whnf e@(Var _) = e
-whnf e@(Lam _ _) = e
-whnf (App f a) =
-    case whnf f of
-        Lam x b -> whnf (subst x a b)
+-- | Computes week head normal form only for Application
+weekHeadNormalForm :: LC IdInt -> LC IdInt
+weekHeadNormalForm e@(Var _) = e
+weekHeadNormalForm e@(Lam _ _) = e
+weekHeadNormalForm (App f a) =
+    case weekHeadNormalForm f of
+        Lam x b -> weekHeadNormalForm (substitute x a b)
         f'      -> App f' a
 
-subst :: IdInt -> LC IdInt -> LC IdInt -> LC IdInt
-subst x s b = sub b
- where sub e@(Var v) | v == x = s
-                     | otherwise = e
-       sub e@(Lam v e') | v == x = e
-                        | v `elem` fvs = Lam v' (sub e'')
-                        | otherwise = Lam v (sub e')
-                            where v' = newId vs
-                                  e'' = subst v (Var v') e'
+substitute :: IdInt -> LC IdInt -> LC IdInt -> LC IdInt
+substitute x s b = sub b
+ where sub e@(Var v)
+            | v == x = s
+            | otherwise = e
+       sub e@(Lam v e')
+            | v == x = e
+            | v `elem` freeVariables = Lam v' (sub e'')
+            | otherwise = Lam v (sub e')
+                where v'  = newId variables
+                      e'' = substitute v (Var v') e'
        sub (App f a) = App (sub f) (sub a)
-       fvs = freeVars s
-       vs = fvs `union` allVars b
-
+       freeVariables = freeVars s
+       variables = freeVariables `union` allVars b
 
 newId :: [IdInt] -> IdInt
 newId vs = head ([firstBoundId .. ] \\ vs)

@@ -9,7 +9,7 @@ import           Text.PrettyPrint.HughesPJ    (Doc, parens, renderStyle, style,
 -- | Main data type for lambda calculus
 data LC v
   = Var v               -- ^ a variable
-  | Lam v (LC v)        -- ^ a lambda function
+  | Lam v (LC v)        -- ^ an abstraction
   | App (LC v) (LC v)   -- ^ an application
    deriving (Eq)
 

@@ -2,7 +2,8 @@ module Main where
 
 import           IdInt
 import           Lambda
-import           Simple
+--import           Simple
+import           Unique
 
 import           System.Console.Haskeline
 import           System.Environment
@@ -24,5 +25,5 @@ main = runInputT defaultSettings loop
 
         process :: String -> IO ()
         process input = do let expr = (read input) :: LC Id
-                           let result = nf (toIdInt expr)
+                           let result = normalForm (toIdInt expr)
                            print result
